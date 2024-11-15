@@ -1,1 +1,1 @@
-# servl_frontend
+This is the frontend for our SERVL Project

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Archive - City</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        .content-box {
+            max-width: 800px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        .video-placeholder, .plot-placeholder {
+            border: 2px dashed #ccc;
+            width: 100%;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <div class="content-box">
+                <h1 class="title">Weather Archive - <span id="cityName">City Name</span></h1>
+                <h2 class="subtitle">TOPIC</h2>
+                <div class="video-placeholder">
+                    <p>Video Placeholder</p>
+                </div>
+                <div class="plot-placeholder">
+                    <p>Plot Placeholder</p>
+                </div>
+                <div class="controls">
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <input class="input" type="date" id="datePicker" value="2022-11-11">
+                        </div>
+                        <div class="control">
+                            <input class="slider" type="range" min="0" max="23" step="1" value="0" id="hourSlider">
+                        </div>
+                        <div class="control">
+                            <label id="hourLabel">Selected Time: 0:00</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        // Extract the city name from the query string and set it as the city name displayed
+        const params = new URLSearchParams(window.location.search);
+        const city = params.get('city');
+        if (city) {
+            document.getElementById('cityName').textContent = city;
+        }
+
+        // Update the label to show the selected time from the slider
+        const hourSlider = document.getElementById('hourSlider');
+        const hourLabel = document.getElementById('hourLabel');
+        hourSlider.addEventListener('input', function() {
+            hourLabel.textContent = `Selected Time: ${hourSlider.value}:00`;
+        });
+    </script>
+</body>
+</html>
