@@ -1,41 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Weather Archive</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <style>
-        .search-box {
-            max-width: 600px;
-            margin: 50px auto;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Weather Archive</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+  />
+  <style>
+    .search-box {
+      max-width: 600px;
+      margin: 50px auto;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Basic styling for the dropdown container */
+    .autocomplete-items {
+      border: 1px solid #d4d4d4;
+      border-top: none;
+      position: absolute;
+      top: 56px; /* adjust for your input height */
+      left: 0;
+      right: 0;
+      z-index: 99;
+      background: #fff;
+    }
+    .autocomplete-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+    .autocomplete-item:hover {
+      background-color: #f2f2f2;
+    }
+    /* highlight matching text in bold */
+    .highlight {
+      font-weight: bold;
+    }
+
+    /* Error message style */
+    .error-message {
+      margin-top: 10px;
+      color: red;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
-    <section class="section">
-        <div class="container">
-            <div class="search-box">
-                <h1 class="title">The Weather Archive</h1>
-                <div class="field has-addons">
-                    <div class="control is-expanded">
-                        <input id="cityInput" class="input" type="text" placeholder="Search">
-                    </div>
-                    <div class="control">
-                        <button id="searchButton" class="button is-primary">Search</button>
-                    </div>
-                </div>
-            </div>
+  <section class="section">
+    <div class="container">
+      <div class="search-box">
+        <h1 class="title">The Weather Archive</h1>
+        <div class="field has-addons">
+          <div class="control is-expanded">
+            <input
+              id="cityInput"
+              class="input"
+              type="text"
+              placeholder="Search"
+            />
+            <!-- The dropdown for the autocomplete suggestions -->
+            <div id="autocompleteList" class="autocomplete-items"></div>
+          </div>
+          <div class="control">
+            <button id="searchButton" class="button is-primary">
+              Search
+            </button>
+          </div>
         </div>
-    </section>
-    <script>
-        document.getElementById('searchButton').addEventListener('click', function() {
-            const city = document.getElementById('cityInput').value;
-            if (city) {
-                window.location.href = `/archive.html?city=${city}`;
-            }
+        <!-- Error message container -->
+        <div id="errorMessage" class="error-message"></div>
+      </div>
+    </div>
+  </section>
+  <script>
+    // List of possible suggestions
+    const suggestions = ["Vienna", "Berlin", "Paris", "London"];
+
+    const cityInput = document.getElementById("cityInput");
+    const autocompleteList = document.getElementById("autocompleteList");
+    const searchButton = document.getElementById("searchButton");
+    const errorMessage = document.getElementById("errorMessage");
+
+    // Close the autocomplete dropdown
+    function closeAutocomplete() {
+      autocompleteList.innerHTML = "";
+    }
+
+    // When the user clicks anywhere outside of the suggestions, close it
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".search-box")) {
+        closeAutocomplete();
+      }
+    });
+
+    // Listen for input changes
+    cityInput.addEventListener("input", function () {
+      const inputValue = this.value.trim().toLowerCase();
+      autocompleteList.innerHTML = "";
+
+      // Clear any previous error
+      errorMessage.textContent = "";
+
+      // If nothing typed, don't show anything
+      if (!inputValue) {
+        return;
+      }
+
+      // Filter our suggestions array
+      const filtered = suggestions.filter((city) =>
+        city.toLowerCase().includes(inputValue)
+      );
+
+      // For each matching suggestion, create a div element
+      filtered.forEach((city) => {
+        const cityDiv = document.createElement("div");
+        cityDiv.classList.add("autocomplete-item");
+        
+        // Optionally highlight the matching letters
+        const regex = new RegExp(inputValue, "gi");
+        const highlightedCity = city.replace(regex, (match) => {
+          return `<span class="highlight">${match}</span>`;
         });
-    </script>
+
+        cityDiv.innerHTML = highlightedCity;
+
+        // On click, fill the input with the clicked suggestion
+        cityDiv.addEventListener("click", () => {
+          cityInput.value = city;
+          closeAutocomplete();
+        });
+        autocompleteList.appendChild(cityDiv);
+      });
+    });
+
+    // On search button click, navigate if city is present and valid
+    searchButton.addEventListener("click", () => {
+      const city = cityInput.value.trim();
+      if (!city) {
+        errorMessage.textContent = "Please enter a city first.";
+        return;
+      }
+
+      // Check if the city is one of our known suggestions
+      const validCities = ["Vienna", "Berlin", "Paris", "London"];
+      if (validCities.includes(city)) {
+        // If it’s valid, clear any error and redirect
+        errorMessage.textContent = "";
+        window.location.href = `/archive.html?city=${city}`;
+      } else {
+        // Otherwise, show error message
+        errorMessage.textContent = "The city you entered does not have weather data!";
+      }
+    });
+  </script>
 </body>
 </html>
