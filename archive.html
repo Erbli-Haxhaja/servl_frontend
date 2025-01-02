@@ -123,9 +123,6 @@
           fromTime || "--";
         document.getElementById("toTimeLabel").textContent = toTime || "--";
 
-        // Construct the GET request URL
-        // e.g. https://yazewp0p1f.execute-api.us-east-1.amazonaws.com/api/data
-        //      ?city=Vienna&date=2024-12-31&fromTimestamp=00:00&toTimestamp=10:00
         const endpoint =
           "https://yazewp0p1f.execute-api.us-east-1.amazonaws.com/api/data";
         const url = `${endpoint}?city=${encodeURIComponent(
@@ -147,16 +144,6 @@
 
           // Parse JSON response
           const data = await response.json();
-          // data should look like:
-          // {
-          //   "city": "Vienna",
-          //   "date": "2024-12-31",
-          //   "fromTimestamp": "00:00",
-          //   "toTimestamp": "10:00",
-          //   "averageTemperature": 12.7,
-          //   "averageHumidity": 59.83,
-          //   "averagePressure": 1008.26
-          // }
 
           // Update the placeholders with the real data
           document.getElementById("avgTempLabel").textContent =
