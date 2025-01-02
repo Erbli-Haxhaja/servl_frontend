@@ -1,72 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Archive - City</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <style>
-        .content-box {
-            max-width: 800px;
-            margin: 50px auto;
-            text-align: center;
-        }
-        .video-placeholder, .plot-placeholder {
-            border: 2px dashed #ccc;
-            width: 100%;
-            height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .controls {
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather Archive - City</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+  />
+  <style>
+    .content-box {
+      max-width: 800px;
+      margin: 50px auto;
+      text-align: center;
+    }
+    .video-placeholder,
+    .plot-placeholder {
+      border: 2px dashed #ccc;
+      width: 100%;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+    .plot-info {
+      text-align: left;
+    }
+    .plot-info p {
+      margin: 0.5rem 0;
+    }
+  </style>
 </head>
 <body>
-    <section class="section">
-        <div class="container">
-            <div class="content-box">
-                <h1 class="title">Weather Archive - <span id="cityName">City Name</span></h1>
-                <h2 class="subtitle">TOPIC</h2>
-                <div class="video-placeholder">
-                    <p>Video Placeholder</p>
-                </div>
-                <div class="plot-placeholder">
-                    <p>Plot Placeholder</p>
-                </div>
-                <div class="controls">
-                    <div class="field is-grouped">
-                        <div class="control">
-                            <input class="input" type="date" id="datePicker" value="2022-11-11">
-                        </div>
-                        <div class="control">
-                            <input class="slider" type="range" min="0" max="23" step="1" value="0" id="hourSlider">
-                        </div>
-                        <div class="control">
-                            <label id="hourLabel">Selected Time: 0:00</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <script>
-        // Extract the city name from the query string and set it as the city name displayed
-        const params = new URLSearchParams(window.location.search);
-        const city = params.get('city');
-        if (city) {
-            document.getElementById('cityName').textContent = city;
-        }
+  <section class="section">
+    <div class="container">
+      <div class="content-box">
+        <h1 class="title">
+          Weather Archive - <span id="cityName">City Name</span>
+        </h1>
+        <h2 class="subtitle">TOPIC</h2>
 
-        // Update the label to show the selected time from the slider
-        const hourSlider = document.getElementById('hourSlider');
-        const hourLabel = document.getElementById('hourLabel');
-        hourSlider.addEventListener('input', function() {
-            hourLabel.textContent = `Selected Time: ${hourSlider.value}:00`;
-        });
-    </script>
+        <!-- VIDEO PLACEHOLDER (unchanged) -->
+        <div class="video-placeholder">
+          <p>Video Placeholder</p>
+        </div>
+
+        <!-- PLOT PLACEHOLDER with date/time info and average metrics -->
+        <div class="plot-placeholder">
+          <div class="plot-info">
+            <p>Date: <span id="selectedDateLabel">--</span></p>
+            <p>From Timestamp: <span id="fromTimeLabel">--</span></p>
+            <p>To Timestamp: <span id="toTimeLabel">--</span></p>
+            <hr />
+            <p>Average Temperature: <span id="avgTempLabel">--</span></p>
+            <p>Average Humidity: <span id="avgHumLabel">--</span></p>
+            <p>Average Pressure: <span id="avgPresLabel">--</span></p>
+          </div>
+        </div>
+
+        <!-- FORM CONTROLS -->
+        <div class="controls">
+          <form class="field is-grouped" id="searchForm">
+            <!-- Date picker (defaults to today's date) -->
+            <div class="control">
+              <input class="input" type="date" id="datePicker" />
+            </div>
+            <!-- Time from -->
+            <div class="control">
+              <label for="timeFrom" style="margin-right:0.5rem;">From:</label>
+              <input class="input" type="time" id="timeFrom" />
+            </div>
+            <!-- Time to -->
+            <div class="control">
+              <label for="timeTo" style="margin-right:0.5rem;">To:</label>
+              <input class="input" type="time" id="timeTo" />
+            </div>
+            <!-- Submit button -->
+            <div class="control">
+              <button class="button is-primary" type="submit">
+                Submit
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // 1. Extract the city name from the query string and set it as the city name displayed
+    const params = new URLSearchParams(window.location.search);
+    const city = params.get("city");
+    if (city) {
+      document.getElementById("cityName").textContent = city;
+    }
+
+    // 2. Automatically set today's date in the date picker
+    window.addEventListener("DOMContentLoaded", () => {
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("datePicker").value = today;
+    });
+
+    // 3. Submit form handler
+    document
+      .getElementById("searchForm")
+      .addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        // Grab date/time values
+        const selectedDate = document.getElementById("datePicker").value;
+        const fromTime = document.getElementById("timeFrom").value;
+        const toTime = document.getElementById("timeTo").value;
+
+        // Display them in the placeholders right away
+        document.getElementById("selectedDateLabel").textContent =
+          selectedDate || "--";
+        document.getElementById("fromTimeLabel").textContent =
+          fromTime || "--";
+        document.getElementById("toTimeLabel").textContent = toTime || "--";
+
+        // Construct the GET request URL
+        // e.g. https://yazewp0p1f.execute-api.us-east-1.amazonaws.com/api/data
+        //      ?city=Vienna&date=2024-12-31&fromTimestamp=00:00&toTimestamp=10:00
+        const endpoint =
+          "https://yazewp0p1f.execute-api.us-east-1.amazonaws.com/api/data";
+        const url = `${endpoint}?city=${encodeURIComponent(
+          city
+        )}&date=${encodeURIComponent(
+          selectedDate
+        )}&fromTimestamp=${encodeURIComponent(
+          fromTime
+        )}&toTimestamp=${encodeURIComponent(toTime)}`;
+
+        try {
+          // Send GET request
+          const response = await fetch(url, { method: "GET" });
+          if (!response.ok) {
+            throw new Error(
+              `Request failed with status ${response.status} - ${response.statusText}`
+            );
+          }
+
+          // Parse JSON response
+          const data = await response.json();
+          // data should look like:
+          // {
+          //   "city": "Vienna",
+          //   "date": "2024-12-31",
+          //   "fromTimestamp": "00:00",
+          //   "toTimestamp": "10:00",
+          //   "averageTemperature": 12.7,
+          //   "averageHumidity": 59.83,
+          //   "averagePressure": 1008.26
+          // }
+
+          // Update the placeholders with the real data
+          document.getElementById("avgTempLabel").textContent =
+            data.averageTemperature !== undefined
+              ? `${data.averageTemperature} °C`
+              : "--";
+          document.getElementById("avgHumLabel").textContent =
+            data.averageHumidity !== undefined
+              ? `${data.averageHumidity}%`
+              : "--";
+          document.getElementById("avgPresLabel").textContent =
+            data.averagePressure !== undefined
+              ? `${data.averagePressure} hPa`
+              : "--";
+        } catch (error) {
+          console.error("Error fetching data:", error);
+          // Handle error (e.g., show a user-friendly message or fallback values)
+          document.getElementById("avgTempLabel").textContent = "Error";
+          document.getElementById("avgHumLabel").textContent = "Error";
+          document.getElementById("avgPresLabel").textContent = "Error";
+        }
+      });
+  </script>
 </body>
 </html>
