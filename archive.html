@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Weather Archive - City</title>
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
-  />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"/>
   <style>
     .content-box {
       max-width: 800px;
@@ -33,15 +30,23 @@
     .plot-info p {
       margin: 0.5rem 0;
     }
+    /* Simple styling for error message */
+    #errorMessage {
+      color: red;
+      margin-top: 1rem;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
   <section class="section">
     <div class="container">
       <div class="content-box">
-        <h1 class="title">
-          Weather Archive - <span id="cityName">City Name</span>
-        </h1>
+        <a href="index.html">
+          <h1 class="title">
+            Weather Archive - <span id="cityName">City Name</span>
+          </h1>
+        </a>
         <h2 class="subtitle">TOPIC</h2>
 
         <!-- VIDEO PLACEHOLDER (unchanged) -->
@@ -49,16 +54,21 @@
           <p>Video Placeholder</p>
         </div>
 
-        <!-- PLOT PLACEHOLDER with date/time info and average metrics -->
+        <!-- PLOT PLACEHOLDER -->
         <div class="plot-placeholder">
           <div class="plot-info">
-            <p>Date: <span id="selectedDateLabel">--</span></p>
-            <p>From Timestamp: <span id="fromTimeLabel">--</span></p>
-            <p>To Timestamp: <span id="toTimeLabel">--</span></p>
-            <hr />
-            <p>Average Temperature: <span id="avgTempLabel">--</span></p>
-            <p>Average Humidity: <span id="avgHumLabel">--</span></p>
-            <p>Average Pressure: <span id="avgPresLabel">--</span></p>
+            <!-- We wrap the data paragraphs in a container we can show/hide -->
+            <div id="resultsContainer">
+              <p>Date: <span id="selectedDateLabel">--</span></p>
+              <p>From Timestamp: <span id="fromTimeLabel">--</span></p>
+              <p>To Timestamp: <span id="toTimeLabel">--</span></p>
+              <hr />
+              <p>Average Temperature: <span id="avgTempLabel">--</span></p>
+              <p>Average Humidity: <span id="avgHumLabel">--</span></p>
+              <p>Average Pressure: <span id="avgPresLabel">--</span></p>
+            </div>
+            <!-- This is our error message placeholder -->
+            <div id="errorMessage" style="display: none;"></div>
           </div>
         </div>
 
@@ -105,67 +115,71 @@
       document.getElementById("datePicker").value = today;
     });
 
-    // 3. Submit form handler
-    document
-      .getElementById("searchForm")
-      .addEventListener("submit", async (event) => {
-        event.preventDefault();
+    // 3. Grab references to the relevant elements
+    const resultsContainer = document.getElementById("resultsContainer");
+    const errorMessage = document.getElementById("errorMessage");
+    const avgTempLabel = document.getElementById("avgTempLabel");
+    const avgHumLabel = document.getElementById("avgHumLabel");
+    const avgPresLabel = document.getElementById("avgPresLabel");
 
-        // Grab date/time values
-        const selectedDate = document.getElementById("datePicker").value;
-        const fromTime = document.getElementById("timeFrom").value;
-        const toTime = document.getElementById("timeTo").value;
+    document.getElementById("searchForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
 
-        // Display them in the placeholders right away
-        document.getElementById("selectedDateLabel").textContent =
-          selectedDate || "--";
-        document.getElementById("fromTimeLabel").textContent =
-          fromTime || "--";
-        document.getElementById("toTimeLabel").textContent = toTime || "--";
+      // Grab date/time values
+      const selectedDate = document.getElementById("datePicker").value;
+      const fromTime = document.getElementById("timeFrom").value;
+      const toTime = document.getElementById("timeTo").value;
 
-        const endpoint =
-          "https://yazewp0p1f.execute-api.us-east-1.amazonaws.com/api/data";
-        const url = `${endpoint}?city=${encodeURIComponent(
-          city
-        )}&date=${encodeURIComponent(
-          selectedDate
-        )}&fromTimestamp=${encodeURIComponent(
-          fromTime
-        )}&toTimestamp=${encodeURIComponent(toTime)}`;
+      // Display them in the placeholders right away
+      document.getElementById("selectedDateLabel").textContent = selectedDate || "--";
+      document.getElementById("fromTimeLabel").textContent = fromTime || "--";
+      document.getElementById("toTimeLabel").textContent = toTime || "--";
 
-        try {
-          // Send GET request
-          const response = await fetch(url, { method: "GET" });
-          if (!response.ok) {
-            throw new Error(
-              `Request failed with status ${response.status} - ${response.statusText}`
-            );
-          }
+      // Construct the GET request URL
+      const endpoint = "https://yazewp0p1f.execute-api.us-east-1.amazonaws.com/api/data";
+      const url = `${endpoint}?city=${encodeURIComponent(city)}&date=${encodeURIComponent(selectedDate)}&fromTimestamp=${encodeURIComponent(fromTime)}&toTimestamp=${encodeURIComponent(toTime)}`;
 
-          // Parse JSON response
-          const data = await response.json();
+      try {
+        // Send GET request
+        const response = await fetch(url, { method: "GET" });
+        if (!response.ok) {
+          throw new Error(
+            `Request failed with status ${response.status} - ${response.statusText}`
+          );
+        }
+
+        // Parse JSON response
+        const data = await response.json();
+
+        // If the response has averageTemperature, assume data is valid
+        if (
+          typeof data.averageTemperature === "number" &&
+          typeof data.averageHumidity === "number" &&
+          typeof data.averagePressure === "number"
+        ) {
+          // Show the results container
+          resultsContainer.style.display = "block";
+          // Hide any error message
+          errorMessage.style.display = "none";
 
           // Update the placeholders with the real data
-          document.getElementById("avgTempLabel").textContent =
-            data.averageTemperature !== undefined
-              ? `${data.averageTemperature} °C`
-              : "--";
-          document.getElementById("avgHumLabel").textContent =
-            data.averageHumidity !== undefined
-              ? `${data.averageHumidity}%`
-              : "--";
-          document.getElementById("avgPresLabel").textContent =
-            data.averagePressure !== undefined
-              ? `${data.averagePressure} hPa`
-              : "--";
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          // Handle error (e.g., show a user-friendly message or fallback values)
-          document.getElementById("avgTempLabel").textContent = "Error";
-          document.getElementById("avgHumLabel").textContent = "Error";
-          document.getElementById("avgPresLabel").textContent = "Error";
+          avgTempLabel.textContent = `${data.averageTemperature} °C`;
+          avgHumLabel.textContent = `${data.averageHumidity}%`;
+          avgPresLabel.textContent = `${data.averagePressure} hPa`;
+        } else {
+          // If data is missing or invalid, treat it like an error
+          throw new Error("No data available");
         }
-      });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Hide the results container
+        resultsContainer.style.display = "none";
+
+        // Show the error message
+        errorMessage.textContent = "Data is not available for the selected date and time.";
+        errorMessage.style.display = "block";
+      }
+    });
   </script>
 </body>
 </html>
